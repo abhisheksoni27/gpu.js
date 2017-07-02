@@ -14,30 +14,30 @@ const jsprettify = require('gulp-jsbeautifier');
 const babel = require('gulp-babel');
 const stripComments = require('gulp-strip-comments');
 
+const buildFiles = [{
+	input: './src/index.js',
+	output: 'gpu.js'
+}, {
+	input: './src/index-core.js',
+	output: 'gpu-core.js'
+}];
+
 /// Build the scripts
 gulp.task('build', function() {
-	browserify('./src/index.js')
-	.bundle()
-	.pipe(source('gpu.js'))
-	.pipe(buffer())
-	.pipe(stripComments())
-	.pipe(babel())
-		.pipe(header(fs.readFileSync('./src/wrapper/header.js', 'utf8'), { pkg : pkg }))
-		.pipe(gulp.dest('bin'));
-
-	browserify('./src/index-core.js')
-	.bundle()
-	.pipe(source('gpu-core.js'))
-	.pipe(buffer())
-	.pipe(stripComments())
-	.pipe(babel())
-		.pipe(header(fs.readFileSync('./src/wrapper/header.js', 'utf8'), { pkg : pkg }))
-		.pipe(gulp.dest('bin'));
+	buildFiles.forEach((file)=>{
+		browserify(file.input)
+		.bundle()
+		.pipe(source(file.output))
+		.pipe(buffer())
+		.pipe(stripComments())
+		.pipe(babel())
+			.pipe(header(fs.readFileSync('./src/wrapper/header.js', 'utf8'), { pkg : pkg }))
+			.pipe(gulp.dest('bin'));
+		});
 });
 
 /// Minify the build script, after building it
 gulp.task('minify', ['build'], function() {
-	return (
 		gulp.src('bin/gpu.js')
 			.pipe(rename('gpu.min.js'))
 			.pipe(
@@ -45,15 +45,15 @@ gulp.task('minify', ['build'], function() {
 				.on('error', gutil.log)
 			)
 			.pipe(gulp.dest('bin'))
-	) && (
-		gulp.src('bin/gpu-core.js')
-			.pipe(rename('gpu-core.min.js'))
-			.pipe(
-				uglify({preserveComments: 'license'})
-				.on('error', gutil.log)
-			)
-			.pipe(gulp.dest('bin'))
-	);
+
+	// 	gulp.src('bin/gpu-core.js')
+	// 		.pipe(rename('gpu-core.min.js'))
+	// 		.pipe(
+	// 			uglify({preserveComments: 'license'})
+	// 			.on('error', gutil.log)
+	// 		)
+	// 		.pipe(gulp.dest('bin'))
+	// );
 });
 
 /// The browser sync prototyping
